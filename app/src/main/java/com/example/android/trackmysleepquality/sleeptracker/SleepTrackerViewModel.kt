@@ -17,6 +17,7 @@
 package com.example.android.trackmysleepquality.sleeptracker
 
 import android.app.Application
+import android.provider.SyncStateContract.Helpers.insert
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import com.example.android.trackmysleepquality.database.SleepDatabaseDao
@@ -48,8 +49,6 @@ class SleepTrackerViewModel(
     }
 
     private suspend fun getTonightFromDatabase(): SleepNight? {
-
-
         return withContext(Dispatchers.IO) {
             var night = database.getTonight()
             if (night?.endTimeMilli != night?.startTimeMilli) {
@@ -64,6 +63,22 @@ class SleepTrackerViewModel(
     override fun onCleared() {
         super.onCleared()
         viewModelJob.cancel()
+
+    }
+
+
+
+   suspend fun onStartTracking() {
+        uiScope.launch {}
+        val newNight = SleepNight()
+       insert(newNight)
+       tonight.value = getTonightFromDatabase()
+    }
+
+    private suspend fun insert(night: SleepNight) {
+        withContext(Dispatchers.IO) {
+            database.insert(night)
+        }
     }
 }
 
